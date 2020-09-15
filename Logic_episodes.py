@@ -105,4 +105,32 @@ else:
     print("Sorry, you`re too young to play this game")
     game_over = the_end()
 
+'''
+class Character:
+    def __init__(self, name, age, health, chance, stage):
+        self.name = name
+        self.age = age
+        self.health = health
+        self.chance = chance
+        self.stage = stage
 
+    def getName(self):
+        self.name = input("Enter your name: ")
+        return self.name
+
+    def getAge(self):
+        self.age = int(input("Enter your age: "))
+        return self.age
+
+
+    def newCharacter(self):
+        global mainCh
+        mainCh = self.__init__(self.getName(), self.getAge(), 10, 0, 0)
+        print('Success! A new character was added with the following parameters:')
+        print('Name:', self.name)
+        print('Age:', self.age)
+        print('Health:', self.health)
+        print('Chance:', self.chance)
+    
+Character.newCharacter(Character)
+'''
