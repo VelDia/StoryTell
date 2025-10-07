@@ -267,7 +267,7 @@ def add_entry(entry_text: str, timestamp: datetime | None = None) -> JournalEntr
 
 
 def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Log a structured journal entry")
+    parser = argparse.ArgumentParser(description="Log or review structured journal entries")
     parser.add_argument(
         "--entry",
         help="The journal entry text. If omitted, the script will read from standard input.",
@@ -276,11 +276,77 @@ def parse_arguments() -> argparse.Namespace:
         "--timestamp",
         help="Optional ISO timestamp for the entry (defaults to the current time).",
     )
+    parser.add_argument(
+        "--history",
+        action="store_true",
+        help="Display previously saved entries instead of adding a new one.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help="When showing history, only display the most recent N entries.",
+    )
     return parser.parse_args()
+
+
+def _history_sort_key(entry: Dict[str, Sequence[str] | str]) -> datetime:
+    timestamp = entry.get("timestamp")
+    if isinstance(timestamp, str):
+        try:
+            return datetime.fromisoformat(timestamp)
+        except ValueError:
+            pass
+    return datetime.min
+
+
+def show_history(limit: int | None = None) -> None:
+    if limit is not None and limit <= 0:
+        raise SystemExit("Limit must be a positive integer when provided.")
+
+    journal = load_journal()
+    entries = journal.get("entries", [])
+    if not entries:
+        print("No journal entries saved yet. Add one with --entry to get started.")
+        return
+
+    sorted_entries = sorted(entries, key=_history_sort_key, reverse=True)
+    if limit is not None:
+        sorted_entries = sorted_entries[:limit]
+
+    total = len(entries)
+    shown = len(sorted_entries)
+    print(f"Showing {shown} of {total} saved journal entries:\n")
+
+    sections = ["feelings", "events", "health", "situations", "people"]
+    divider = "-" * 60
+
+    for entry in sorted_entries:
+        timestamp = entry.get("timestamp", "(no timestamp)")
+        raw_entry = entry.get("raw_entry", "").strip()
+        print(divider)
+        print(f"Timestamp: {timestamp}")
+        if raw_entry:
+            print(f"Entry: {raw_entry}")
+        for section in sections:
+            values = entry.get(section) or []
+            if values:
+                readable = ", ".join(str(value) for value in values)
+                print(f"{section.title()}: {readable}")
+        print()
+    print(divider)
 
 
 def main() -> None:
     args = parse_arguments()
+
+    if args.history:
+        if args.entry or args.timestamp:
+            raise SystemExit("--history cannot be combined with --entry or --timestamp.")
+        show_history(limit=args.limit)
+        return
+
+    if args.limit is not None:
+        raise SystemExit("--limit can only be used together with --history.")
 
     if args.entry:
         entry_text = args.entry

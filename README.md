@@ -24,3 +24,19 @@ python digital_journal.py --entry "Visited the doctor for a checkup." --timestam
 ```
 
 After saving, the script prints the structured summary of what it detected.
+
+### Reviewing past entries
+
+To revisit what you've logged so far, use the `--history` flag. The script
+prints the most recent entries first and echoes both the original text and the
+detected categories:
+
+```
+python digital_journal.py --history
+```
+
+You can limit the output to the latest _N_ entries:
+
+```
+python digital_journal.py --history --limit 5
+```
